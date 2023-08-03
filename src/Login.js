@@ -1,107 +1,72 @@
-import { useRef, useState, useEffect, useContext } from 'react';
-import AuthContext from "./context/AuthProvider";
-
-import axios from './api/axios';
-const LOGIN_URL = '/auth';
+import React, { useState } from 'react';
+import './Login.css';
+import toast,{ Toaster }from 'react-hot-toast';
 
 const Login = () => {
-    const { setAuth } = useContext(AuthContext);
-    const userRef = useRef();
-    const errRef = useRef();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
-    const [user, setUser] = useState('');
-    const [pwd, setPwd] = useState('');
-    const [errMsg, setErrMsg] = useState('');
-    const [success, setSuccess] = useState(false);
+  const handleUsernameChange = (event) => {
+    setUsername(event.target.value);
+  };
 
-    useEffect(() => {
-        userRef.current.focus();
-    }, [])
+  const handlePasswordChange = (event) => {
+    const newPassword = event.target.value;
+    setPassword(newPassword);
 
-    useEffect(() => {
-        setErrMsg('');
-    }, [user, pwd])
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        try {
-            const response = await axios.post(LOGIN_URL,
-                JSON.stringify({ user, pwd }),
-                {
-                    headers: { 'Content-Type': 'application/json' },
-                    withCredentials: true
-                }
-            );
-            console.log(JSON.stringify(response?.data));
-            //console.log(JSON.stringify(response));
-            const accessToken = response?.data?.accessToken;
-            const roles = response?.data?.roles;
-            setAuth({ user, pwd, roles, accessToken });
-            setUser('');
-            setPwd('');
-            setSuccess(true);
-        } catch (err) {
-            if (!err?.response) {
-                setErrMsg('No Server Response');
-            } else if (err.response?.status === 400) {
-                setErrMsg('Missing Username or Password');
-            } else if (err.response?.status === 401) {
-                setErrMsg('Unauthorized');
-            } else {
-                setErrMsg('Login Failed');
-            }
-            errRef.current.focus();
-        }
+    // Password length validation
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters long.');
+    } else {
+      setPasswordError('');
     }
+  };
 
-    return (
-        <>
-            {success ? (
-                <section>
-                    <h1>You are logged in!</h1>
-                    <br />
-                    <p>
-                        <a href="#">Go to Home</a>
-                    </p>
-                </section>
-            ) : (
-                <section>
-                    <p ref={errRef} className={errMsg ? "errmsg" : "offscreen"} aria-live="assertive">{errMsg}</p>
-                    <h1>Sign In</h1>
-                    <form onSubmit={handleSubmit}>
-                        <label htmlFor="username">Username:</label>
-                        <input
-                            type="text"
-                            id="username"
-                            ref={userRef}
-                            autoComplete="off"
-                            onChange={(e) => setUser(e.target.value)}
-                            value={user}
-                            required
-                        />
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    
+     toast.success('Login Successfully');
 
-                        <label htmlFor="password">Password:</label>
-                        <input
-                            type="password"
-                            id="password"
-                            onChange={(e) => setPwd(e.target.value)}
-                            value={pwd}
-                            required
-                        />
-                        <button>Sign In</button>
-                    </form>
-                    <p>
-                        Need an Account?<br />
-                        <span className="line">
-                            {/*put router link here*/}
-                            <a href="#">Sign Up</a>
-                        </span>
-                    </p>
-                </section>
-            )}
-        </>
-    )
-}
 
-export default Login
+    // Clear the form fields after submission
+    setUsername('');
+    setPassword('');
+  };
+
+  return (
+    <div className="login-container">
+        <Toaster/>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="username">Username:</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={handleUsernameChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={handlePasswordChange}
+            required
+          />
+        </div>
+        {passwordError && <div className="error-message">{passwordError}</div>}
+        <button type="submit">
+          Login
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default Login;
+
